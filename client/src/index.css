@@ -1,22 +1,25 @@
+:root {
+    --dark-bg: #202124;
+    --dark-text: #ffffff;
+    --dark-primary: #8ab4f8;
+    --dark-secondary: #303134;
+}
+
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    background-color: var(--dark-bg);
+    color: var(--dark-text);
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Override Clerk's default styles if needed */
+.cl-component {
+    background-color: var(--dark-bg) !important;
+    color: var(--dark-text) !important;
 }
 
-::-webkit-scrollbar{
-  width: 0.5rem;
-  height: 0.5rem;
+.cl-component input {
+    background-color: var(--dark-secondary) !important;
+    color: var(--dark-text) !important;
 }
-::-webkit-scrollbar-thumb{
-  background-color: grey;
-  border-radius: 5rem;
-}
+

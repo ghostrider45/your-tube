@@ -1,28 +1,69 @@
-import React from 'react';
+import { ClerkProvider } from '@clerk/clerk-react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import {Provider} from "react-redux";
-import { applyMiddleware,compose } from 'redux';
-import {legacy_createStore as createstore} from "redux"
-import {thunk} from "redux-thunk"
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { Provider } from 'react-redux';
+import { createStore, compose, applyMiddleware } from 'redux';
+import { thunk } from 'redux-thunk';
 import Reducers from './Reducers';
-const store=createstore(Reducers,compose(applyMiddleware(thunk)));
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
+import App from './App';
 
-  <Provider store={store}>
-    <GoogleOAuthProvider clientId="166816135762-85nfhjsbg0b8d819cg44cm1tma683amo.apps.googleusercontent.com">
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-  </GoogleOAuthProvider>
-  </Provider>
+const AppWrapper = () => {
+    const [clerkConfig, setClerkConfig] = useState(null);
+
+    useEffect(() => {
+        // Get user's location from localStorage or fetch it
+        const userLocation = localStorage.getItem('userLocation') || 'non-south-india';
+        
+        const config = {
+            appearance: {
+                variables: {
+                    colorPrimary: '#8ab4f8',
+                    colorBackground: '#202124',
+                    colorText: '#ffffff',
+                    colorTextSecondary: '#bdc1c6',
+                },
+            },
+            signIn: {
+                // Restrict to only one authentication method
+                firstFactorOptions: userLocation === 'south-india' 
+                    ? [{ strategy: "phone_code", supportedIdentifierTypes: ["phone_number"] }]
+                    : [{ strategy: "email_code", supportedIdentifierTypes: ["email_address"] }],
+            },
+            // Completely disable unwanted authentication methods
+            signUp: {
+                // Prevent sign-ups with the wrong method
+                disabled: true
+            }
+        };
+
+        setClerkConfig(config);
+    }, []);
+
+    if (!clerkConfig) return null;
+
+    return (
+        <ClerkProvider 
+            publishableKey={process.env.REACT_APP_CLERK_PUBLISHABLE_KEY}
+            {...clerkConfig}
+        >
+            <React.StrictMode>
+                <App />
+            </React.StrictMode>
+        </ClerkProvider>
+    );
+};
+
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+const store = createStore(
+    Reducers,
+    composeEnhancers(applyMiddleware(thunk))
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+    <Provider store={store}>
+        <AppWrapper />
+    </Provider>
+);
+
+

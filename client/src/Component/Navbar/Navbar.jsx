@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useClerk, useUser } from "@clerk/clerk-react";
+import { jwtDecode } from "jwt-decode";
+import { login } from "../../action/auth";
+import { setcurrentuser } from "../../action/currentuser";
 import logo from "./logo.ico";
 import "./Navbar.css";
-import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { RiVideoAddLine } from "react-icons/ri";
 import { IoMdNotificationsOutline } from "react-icons/io";
@@ -9,49 +13,20 @@ import { BiUserCircle } from "react-icons/bi";
 import Searchbar from "./Searchbar/Searchbar";
 import Auth from "../../Pages/Auth/Auth";
 import axios from "axios";
-import { login } from "../../action/auth";
-import { useGoogleLogin, googleLogout } from "@react-oauth/google";
-import {jwtDecode} from "jwt-decode"; // Fixed import
-import { setcurrentuser } from "../../action/currentuser";
 
 const Navbar = ({ toggledrawer, seteditcreatechanelbtn }) => {
   const [authbtn, setauthbtn] = useState(false);
-  const [user, setuser] = useState(null);
-  const [profile, setprofile] = useState(null);
   const dispatch = useDispatch();
   const currentuser = useSelector((state) => state.currentuserreducer);
-
-  const google_login = useGoogleLogin({
-    onSuccess: (tokenResponse) => setuser(tokenResponse),
-    onError: (error) => console.error("Google Login Failed", error),
-    scope: "openid email profile",
-  });
+  const { user } = useUser();
+  const { openSignIn } = useClerk();
 
   useEffect(() => {
-    if (user?.access_token) {
-      console.log("User Token Response:", user); // Debugging
-      axios
-        .get("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: {
-            Authorization: `Bearer ${user.access_token}`, // Fixed template literal
-          },
-        })
-        .then((res) => {
-          console.log("User Profile:", res.data); // Debugging
-          setprofile(res.data);
-          dispatch(login({ email: res.data.email })); // Fixed property access
-        })
-        .catch((err) =>
-          console.error("Error fetching user profile:", err)
-        );
+    if (user) {
+      const userEmail = user.primaryEmailAddress.emailAddress;
+      dispatch(login({ email: userEmail }));
     }
   }, [user, dispatch]);
-
-  const logout = () => {
-    dispatch(setcurrentuser(null));
-    googleLogout();
-    localStorage.clear();
-  };
 
   useEffect(() => {
     const token = currentuser?.token;
@@ -66,6 +41,11 @@ const Navbar = ({ toggledrawer, seteditcreatechanelbtn }) => {
       dispatch(setcurrentuser(JSON.parse(storedProfile)));
     }
   }, [currentuser?.token, dispatch]);
+
+  const logout = () => {
+    dispatch(setcurrentuser(null));
+    localStorage.clear();
+  };
 
   return (
     <>
@@ -99,7 +79,7 @@ const Navbar = ({ toggledrawer, seteditcreatechanelbtn }) => {
               </p>
             </div>
           ) : (
-            <p className="Auth_Btn" onClick={google_login}>
+            <p className="Auth_Btn" onClick={() => openSignIn()}>
               <BiUserCircle size={22} />
               <b>Sign in</b>
             </p>
@@ -118,3 +98,6 @@ const Navbar = ({ toggledrawer, seteditcreatechanelbtn }) => {
 };
 
 export default Navbar;
+
+
+

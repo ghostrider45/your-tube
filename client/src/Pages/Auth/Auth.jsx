@@ -1,57 +1,47 @@
 import React from 'react';
 import { BiLogOut } from 'react-icons/bi';
-import { Link } from 'react-router-dom';
-import { googleLogout } from '@react-oauth/google';
+import { Link, useNavigate } from 'react-router-dom';
+import { useClerk } from '@clerk/clerk-react';
 import "./Auth.css";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setcurrentuser } from '../../action/currentuser';
 
 const Auth = ({ user, setauthbtn, seteditcreatechanelbtn }) => {
     const dispatch = useDispatch();
-    const points = useSelector((state) => state.currentuserreducer?.result?.points || 0); // Fetch updated points
+    const { signOut } = useClerk();
+    const navigate = useNavigate();
 
-    const logout = () => {
-        dispatch(setcurrentuser(null));
-        localStorage.clear();
-        googleLogout();
+    const handleLogout = async () => {
+        try {
+            await signOut();
+            dispatch(setcurrentuser(null));
+            localStorage.clear();
+            setauthbtn(false);
+        } catch (error) {
+            console.error("Error during logout:", error);
+        }
+    };
+
+    const handleChannelClick = () => {
+        setauthbtn(false); // Close the auth popup
+        navigate(`/channel/${user?.result?._id}`);
     };
 
     return (
         <div className="Auth_container" onClick={() => setauthbtn(false)}>
-            <div className="Auth_container2">
-                <p className="User_Details">
-                    <div className="Chanel_logo_App">
-                        <p className="fstChar_logo_App">
-                            {user?.result.name ? (
-                                <>{user?.result.name.charAt(0).toUpperCase()}</>
-                            ) : (
-                                <>{user?.result.email.charAt(0).toUpperCase()}</>
-                            )}
-                        </p>
+            <div className="Auth_container2" onClick={(e) => e.stopPropagation()}>
+                <div className='User_Details'>
+                    <p>{user?.result?.email}</p>
+                    <p>Points: {user?.result?.points || 0}</p>
+                </div>
+                <div className="btns_auth_cont">
+                    <div className='btn_auth' onClick={handleChannelClick}>
+                        <BiLogOut size={20} />
+                        <b>Your Channel</b>
                     </div>
-                    <div className="email_auth">{user?.result.email}</div>
-                    <div className="points_display">Points: {points}</div> {/* Display updated points */}
-                </p>
-                <div className="btns_Auth">
-                    {user?.result.name ? (
-                        <>
-                            <Link to={`/channel/${user?.result?._id}`} className='btn_Auth'>Your Channel</Link>
-                        </>
-                    ) : (
-                        <>
-                            <input 
-                                type="button" 
-                                className='btn_Auth' 
-                                value="Create Your Own Channel" 
-                                onClick={() => seteditcreatechanelbtn(true)}
-                            />
-                        </>
-                    )}
-                    <div>
-                        <div className="btn_Auth" onClick={() => logout()}>
-                            <BiLogOut />
-                            Log Out
-                        </div>
+                    <div className='btn_auth' onClick={handleLogout}>
+                        <BiLogOut size={20} />
+                        <b>Log Out</b>
                     </div>
                 </div>
             </div>
@@ -60,3 +50,10 @@ const Auth = ({ user, setauthbtn, seteditcreatechanelbtn }) => {
 };
 
 export default Auth;
+
+
+
+
+
+
+

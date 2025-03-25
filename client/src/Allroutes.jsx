@@ -20,7 +20,15 @@ const Allroutes = ({seteditcreatechanelbtn,setvideouploadpage}) => {
         <Route path='/Watchhistory' element={<Watchhistory/>}/>
         <Route path='/Watchlater' element={<Watchlater/>}/>
         <Route path='/Yourvideo' element={<Yourvideo/>}/>
-        <Route path='/channel/:cid' element={<Channel seteditcreatechanelbtn={seteditcreatechanelbtn} setvideouploadpage={setvideouploadpage}/>}/>
+        <Route 
+            path='/channel/:cid' 
+            element={
+                <Channel 
+                    seteditcreatechanelbtn={seteditcreatechanelbtn} 
+                    setvideouploadpage={setvideouploadpage}
+                />
+            }
+        />
     </Routes>
   )
 }
