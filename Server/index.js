@@ -39,17 +39,31 @@ const connectDB = async () => {
         if (!DB_URL) {
             throw new Error("MongoDB connection URL is not defined in environment variables")
         }
-        await mongoose.connect(DB_URL)
-        console.log("MongoDB Database connected successfully")
         
-        // Start server only after successful DB connection
-        app.listen(PORT, () => {
-            console.log(`Server running on Port ${PORT}`)
-        })
+        // Add connection options
+        const options = {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+        };
+
+        console.log("Attempting to connect to MongoDB...");
+        await mongoose.connect(DB_URL, options);
+        console.log("MongoDB Database connected successfully");
+        
+        // Only start server after DB connection
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`Server running on Port ${PORT}`);
+        });
     } catch (error) {
-        console.error("MongoDB connection error:", error.message)
-        process.exit(1)
+        console.error("Detailed connection error:", {
+            name: error.name,
+            message: error.message,
+            code: error.code
+        });
+        process.exit(1);
     }
 }
 
 connectDB()
+
