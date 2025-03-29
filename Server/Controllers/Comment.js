@@ -28,10 +28,48 @@ export const postcomment = async (req, res) => {
 
 export const likeComment = async (req, res) => {
     const { id: _id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(400).send("Invalid Comment ID");
+    const userId = req.userId; // From auth middleware
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) 
+        return res.status(400).send("Invalid Comment ID");
 
     try {
-        const updatedComment = await comment.findByIdAndUpdate(_id, { $inc: { likes: 1 } }, { new: true });
+        const commentDoc = await comment.findById(_id);
+        
+        if (!commentDoc) 
+            return res.status(404).send("Comment not found");
+
+        // Check if user already liked
+        const alreadyLiked = commentDoc.likedBy.includes(userId);
+        // Check if user previously disliked
+        const previouslyDisliked = commentDoc.dislikedBy.includes(userId);
+
+        let updateQuery = {};
+
+        if (alreadyLiked) {
+            // Unlike if already liked
+            updateQuery = {
+                $inc: { likes: -1 },
+                $pull: { likedBy: userId }
+            };
+        } else {
+            // Add like and remove from dislikes if previously disliked
+            updateQuery = {
+                $inc: { 
+                    likes: 1,
+                    dislikes: previouslyDisliked ? -1 : 0
+                },
+                $push: { likedBy: userId },
+                $pull: { dislikedBy: userId }
+            };
+        }
+
+        const updatedComment = await comment.findByIdAndUpdate(
+            _id,
+            updateQuery,
+            { new: true }
+        );
+
         res.status(200).json(updatedComment);
     } catch (error) {
         res.status(400).json(error.message);
@@ -40,15 +78,55 @@ export const likeComment = async (req, res) => {
 
 export const dislikeComment = async (req, res) => {
     const { id: _id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(_id)) return res.status(400).send("Invalid Comment ID");
+    const userId = req.userId; // From auth middleware
+
+    if (!mongoose.Types.ObjectId.isValid(_id)) 
+        return res.status(400).send("Invalid Comment ID");
 
     try {
-        const updatedComment = await comment.findByIdAndUpdate(_id, { $inc: { dislikes: 1 } }, { new: true });
+        const commentDoc = await comment.findById(_id);
+        
+        if (!commentDoc) 
+            return res.status(404).send("Comment not found");
 
-        // Delete comment if it gets 2 dislikes
+        // Check if user already disliked
+        const alreadyDisliked = commentDoc.dislikedBy.includes(userId);
+        // Check if user previously liked
+        const previouslyLiked = commentDoc.likedBy.includes(userId);
+
+        let updateQuery = {};
+
+        if (alreadyDisliked) {
+            // Remove dislike if already disliked
+            updateQuery = {
+                $inc: { dislikes: -1 },
+                $pull: { dislikedBy: userId }
+            };
+        } else {
+            // Add dislike and remove from likes if previously liked
+            updateQuery = {
+                $inc: { 
+                    dislikes: 1,
+                    likes: previouslyLiked ? -1 : 0
+                },
+                $push: { dislikedBy: userId },
+                $pull: { likedBy: userId }
+            };
+        }
+
+        const updatedComment = await comment.findByIdAndUpdate(
+            _id,
+            updateQuery,
+            { new: true }
+        );
+
+        // Check if comment should be deleted (2 or more dislikes)
         if (updatedComment.dislikes >= 2) {
             await comment.findByIdAndDelete(_id);
-            return res.status(200).json({ message: "Comment deleted due to dislikes!" });
+            return res.status(200).json({ 
+                message: "Comment deleted due to dislikes",
+                deleted: true
+            });
         }
 
         res.status(200).json(updatedComment);
@@ -96,5 +174,6 @@ export const editcomment = async (req, res) => {
         res.status(400).json(error.message);
     }
 };
+
 
 

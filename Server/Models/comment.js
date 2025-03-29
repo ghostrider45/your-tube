@@ -9,8 +9,23 @@ const commentSchema = mongoose.Schema({
     commenton: {
         type: Date,
         default: Date.now
-    }
+    },
+    likes: {
+        type: Number,
+        default: 0
+    },
+    dislikes: {
+        type: Number,
+        default: 0
+    },
+    likedBy: [{
+        type: String  // Store user IDs who liked
+    }],
+    dislikedBy: [{
+        type: String  // Store user IDs who disliked
+    }]
 });
 
 export default mongoose.model("Comments", commentSchema);
+
 

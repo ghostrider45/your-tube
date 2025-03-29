@@ -40,15 +40,21 @@ const Comment = ({ videoid }) => {
                 {commentlist?.data.filter((q) => videoid === q?.videoid)
                     .reverse()
                     .map((m) => {
-
-                        return (<Displaycommment 
-                            cid={m._id} 
-                            userid={m.userid} 
-                            commentbody={m.commentbody} 
-                            commenton={m.commenton} 
-                            usercommented={m.usercommented}
-                            userlocation={m.userlocation}
-                        />)
+                        return (
+                            <Displaycommment 
+                                key={m._id}
+                                cid={m._id} 
+                                userid={m.userid} 
+                                commentbody={m.commentbody} 
+                                commenton={m.commenton} 
+                                usercommented={m.usercommented}
+                                userlocation={m.userlocation}
+                                likes={m.likes}
+                                dislikes={m.dislikes}
+                                likedBy={m.likedBy}
+                                dislikedBy={m.dislikedBy}
+                            />
+                        )
                     })}
             </div>
         </>
@@ -56,4 +62,5 @@ const Comment = ({ videoid }) => {
 }
 
 export default Comment
+
 

@@ -4,16 +4,49 @@ import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
 import { editcomment, deletecomment, likeComment, dislikeComment } from "../../action/comment";
 import { translateText } from "../../utils/translate";
+import { AiFillLike, AiFillDislike, AiOutlineLike, AiOutlineDislike } from 'react-icons/ai';
 
-const Displaycommment = ({ cid, commentbody, userid, commenton, usercommented, userlocation }) => {
+const Displaycommment = ({ 
+    cid, 
+    commentbody, 
+    userid, 
+    commenton, 
+    usercommented, 
+    userlocation,
+    likes = 0,
+    dislikes = 0,
+    likedBy = [],
+    dislikedBy = []
+}) => {
+    const dispatch = useDispatch();
+    const currentuser = useSelector((state) => state.currentuserreducer);
     const [edit, setedit] = useState(false);
     const [cmtnody, setcommentbdy] = useState("");
     const [translatedComment, setTranslatedComment] = useState("");
-    const [selectedLanguage, setSelectedLanguage] = useState("hi");
-    const dispatch = useDispatch();
-    const currentuser = useSelector((state) => state.currentuserreducer);
+    const [selectedLanguage, setSelectedLanguage] = useState("en");
+    const [originalComment] = useState(commentbody); // Store the original comment
+
+    const hasLiked = currentuser?.result && likedBy.includes(currentuser.result._id);
+    const hasDisliked = currentuser?.result && dislikedBy.includes(currentuser.result._id);
+
+    const handleLike = () => {
+        if (!currentuser?.result) {
+            alert("Please login to like comments");
+            return;
+        }
+        dispatch(likeComment(cid));
+    };
+
+    const handleDislike = () => {
+        if (!currentuser?.result) {
+            alert("Please login to dislike comments");
+            return;
+        }
+        dispatch(dislikeComment(cid));
+    };
 
     const languages = [
+        { code: "en", name: "English" },
         { code: "hi", name: "Hindi" },
         { code: "ta", name: "Tamil" },
         { code: "te", name: "Telugu" },
@@ -26,44 +59,54 @@ const Displaycommment = ({ cid, commentbody, userid, commenton, usercommented, u
     ];
 
     const handleTranslate = async () => {
-        const translatedText = await translateText(commentbody, selectedLanguage);
+        if (selectedLanguage === "en") {
+            setTranslatedComment(""); // Reset to original comment
+            return;
+        }
+        const translatedText = await translateText(originalComment, selectedLanguage);
         setTranslatedComment(translatedText);
     };
 
-    const formatTimestamp = (timestamp) => {
-        const now = moment();
-        const commentTime = moment(timestamp);
-        const diffMinutes = now.diff(commentTime, 'minutes');
-        const diffHours = now.diff(commentTime, 'hours');
-        const diffDays = now.diff(commentTime, 'days');
-
-        if (diffMinutes < 1) {
-            return 'just now';
-        } else if (diffMinutes < 60) {
-            return `${diffMinutes} ${diffMinutes === 1 ? 'minute' : 'minutes'} ago`;
-        } else if (diffHours < 24) {
-            return `${diffHours} ${diffHours === 1 ? 'hour' : 'hours'} ago`;
-        } else if (diffDays < 30) {
-            return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`;
-        } else {
-            return commentTime.format('MMM D, YYYY');
+    const handleLanguageChange = (e) => {
+        const newLanguage = e.target.value;
+        setSelectedLanguage(newLanguage);
+        
+        if (newLanguage === "en") {
+            setTranslatedComment(""); // Reset to original comment
         }
+    };
+
+    const formatTimestamp = (timestamp) => {
+        return moment(timestamp).fromNow();
+    };
+
+    const formatCount = (count) => {
+        if (count >= 1000000) {
+            return `${(count / 1000000).toFixed(1)}M`;
+        } else if (count >= 1000) {
+            return `${(count / 1000).toFixed(1)}K`;
+        }
+        return count.toString();
+    };
+
+    const handleEdit = (e) => {
+        e.preventDefault();
+        if (!cmtnody) {
+            alert("Please enter a comment");
+            return;
+        }
+        dispatch(editcomment({
+            id: cid,
+            commentbody: cmtnody
+        }));
+        setedit(false);
     };
 
     return (
         <>
             {edit ? (
                 <>
-                    <form className="comments_sub_form_comments" onSubmit={(e) => {
-                        e.preventDefault();
-                        if (cmtnody) {
-                            dispatch(editcomment({ id: cid, commentbody: cmtnody }));
-                            setcommentbdy("");
-                            setedit(false);
-                        } else {
-                            alert("Please type your comment!");
-                        }
-                    }}>
+                    <form className="edit_comment_form" onSubmit={handleEdit}>
                         <input
                             type="text"
                             onChange={(e) => setcommentbdy(e.target.value)}
@@ -75,37 +118,71 @@ const Displaycommment = ({ cid, commentbody, userid, commenton, usercommented, u
                     </form>
                 </>
             ) : (
-                <p className="comment_body">{translatedComment || commentbody}</p>
-            )}
-
-            <p className="usercommented">
-                {usercommented} commented from {userlocation || "Unknown"} • {formatTimestamp(commenton)}
-            </p>
-
-            {currentuser?.result?._id === userid && (
-                <div className="comment_actions">
-                    <select
-                        onChange={(e) => setSelectedLanguage(e.target.value)}
-                        value={selectedLanguage}
-                        className="language-dropdown"
-                    >
-                        {languages.map((lang) => (
-                            <option key={lang.code} value={lang.code}>
-                                {lang.name}
-                            </option>
-                        ))}
-                    </select>
-                    <button className="action-btn" onClick={handleTranslate}>Translate</button>
-                    <button className="action-btn" onClick={() => dispatch(likeComment(cid))}>Like</button>
-                    <button className="action-btn" onClick={() => dispatch(dislikeComment(cid))}>Dislike</button>
-                    <button className="action-btn" onClick={() => setedit(true)}>Edit</button>
-                    <button className="action-btn" onClick={() => dispatch(deletecomment(cid))}>Delete</button>
-                </div>
+                <>
+                    <p className="comment_body">{translatedComment || originalComment}</p>
+                    <p className="usercommented">
+                        {usercommented} commented from {userlocation || "Unknown"} • {formatTimestamp(commenton)}
+                    </p>
+                    <div className="comment_actions">
+                        <div className="like-dislike-container">
+                            <button 
+                                className={`action-btn ${hasLiked ? 'active' : ''}`} 
+                                onClick={handleLike}
+                                title="Like"
+                            >
+                                <div className="like-count-wrapper">
+                                    {hasLiked ? <AiFillLike size={20} /> : <AiOutlineLike size={20} />}
+                                    {likes > 0 && <span className="count-display">{formatCount(likes)}</span>}
+                                </div>
+                            </button>
+                            <button 
+                                className={`action-btn ${hasDisliked ? 'active' : ''}`} 
+                                onClick={handleDislike}
+                                title="Dislike"
+                            >
+                                <div className="like-count-wrapper">
+                                    {hasDisliked ? <AiFillDislike size={20} /> : <AiOutlineDislike size={20} />}
+                                    {dislikes > 0 && <span className="count-display">{formatCount(dislikes)}</span>}
+                                </div>
+                            </button>
+                        </div>
+                        <div className="translation-controls">
+                            <select 
+                                value={selectedLanguage}
+                                onChange={handleLanguageChange}
+                                className="language-select"
+                            >
+                                {languages.map((lang) => (
+                                    <option key={lang.code} value={lang.code}>
+                                        {lang.name}
+                                    </option>
+                                ))}
+                            </select>
+                            <button 
+                                onClick={handleTranslate}
+                                className="translate-btn"
+                            >
+                                Translate
+                            </button>
+                        </div>
+                        {currentuser?.result?._id === userid && (
+                            <div className="comment-owner-actions">
+                                <button className="action-btn" onClick={() => setedit(true)}>Edit</button>
+                                <button className="action-btn" onClick={() => dispatch(deletecomment(cid))}>Delete</button>
+                            </div>
+                        )}
+                    </div>
+                </>
             )}
         </>
     );
 };
 
 export default Displaycommment;
+
+
+
+
+
 
 
