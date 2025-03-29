@@ -3,23 +3,20 @@ import mongoose from "mongoose";
 import axios from "axios"; // For making API requests
 
 export const postcomment = async (req, res) => {
-    const { videoid, userid, commentbody, usercommented } = req.body;
+    const { videoid, userid, commentbody, usercommented, location } = req.body;
 
-    // Fetch user location based on IP
-    let userlocation = "Unknown";
-    try {
-        const ipResponse = await axios.get("https://ipapi.co/json/");
-        userlocation = ipResponse.data.city || "Unknown";
-    } catch (error) {
-        console.error("Error fetching user location:", error.message);
-    }
+    const userlocation = location?.city 
+        ? `${location.city}, ${location.state}` 
+        : "Unknown";
 
-    // Restrict special characters in comment
-    if (/[^a-zA-Z0-9\s.,!?]/.test(commentbody)) {
-        return res.status(400).json({ message: "Special characters are not allowed in comments!" });
-    }
-
-    const postcomment = new comment({ videoid, userid, commentbody, usercommented, userlocation });
+    const postcomment = new comment({ 
+        videoid, 
+        userid, 
+        commentbody, 
+        usercommented, 
+        userlocation,
+        commenton: new Date()
+    });
 
     try {
         await postcomment.save();
@@ -99,3 +96,5 @@ export const editcomment = async (req, res) => {
         res.status(400).json(error.message);
     }
 };
+
+

@@ -37,19 +37,48 @@
     color: rgb(197, 197, 197);
     margin: 0;
     margin-top: 0.5rem;
+    font-size: 14px;
+    line-height: 1.4;
   }
   .usercommented {
-    color: rgb(50, 50, 50);
-    margin: 0;
+    color: rgb(128, 128, 128);
+    margin: 0.3rem 0;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
   }
-  .EditDel_DisplayCommendt {
-    padding: 0.2rem;
-    margin: 0;
-    margin-bottom: 0.8rem;
-    color: rgba(44, 85, 209, 0.696);
+  .usercommented .dot {
+    width: 3px;
+    height: 3px;
+    background-color: rgb(128, 128, 128);
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 5px;
+  }
+  .comment_actions {
+    display: flex;
+    gap: 8px;
+    margin: 0.5rem 0 1rem 0;
+  }
+  .action-btn {
+    background: transparent;
+    border: none;
+    color: rgb(44, 85, 209);
     cursor: pointer;
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 4px;
   }
-  
-    .EditDel_DisplayCommendt i {
-      padding: 0.2rem;
-    }
+  .action-btn:hover {
+    background: rgba(44, 85, 209, 0.1);
+  }
+  .language-dropdown {
+    background: transparent;
+    color: rgb(44, 85, 209);
+    border: 1px solid rgb(44, 85, 209);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 13px;
+  }
+

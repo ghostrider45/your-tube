@@ -5,40 +5,29 @@ import { useSelector } from 'react-redux'
 import { useDispatch } from 'react-redux'
 import { postcomment } from '../../action/comment'
 const Comment = ({ videoid }) => {
-    const dispatch = useDispatch()
-    const [commenttext, setcommentext] = useState("")
+    const dispatch = useDispatch();
+    const [commenttext, setcommentext] = useState("");
     const currentuser = useSelector(state => state.currentuserreducer);
-    const commentlist = useSelector(state => state.commentreducer)
-    console.log(commentlist)
-    // const commentlist=[{
-    //     _id:1,
-    //     commentbody:"hello",
-    //     usercommented:"Abc"
-    // },
-    // {
-    //     _id:2,
-    //     commentbody:"hello2",
-    //     usercommented:"Abc2"
-    // }];
+    const commentlist = useSelector(state => state.commentreducer);
+
     const handleonsubmit = (e) => {
         e.preventDefault();
         if (currentuser) {
             if (!commenttext) {
-                alert("please type your comment!!")
-            }
-            else {
+                alert("please type your comment!!");
+            } else {
                 dispatch(postcomment({
                     videoid: videoid,
                     userid: currentuser?.result._id,
                     commentbody: commenttext,
-                    usercommented: currentuser.result.name
-                }))
-                setcommentext("")
+                    usercommented: currentuser.result.name,
+                }));
+                setcommentext("");
             }
         } else {
-            alert("Please login to comment")
+            alert("Please login to comment");
         }
-    }
+    };
 
 
     return (
@@ -52,7 +41,14 @@ const Comment = ({ videoid }) => {
                     .reverse()
                     .map((m) => {
 
-                        return (<Displaycommment cid={m._id} userid={m.userid} commentbody={m.commentbody} commenton={m.commenton} usercommented={m.usercommented} />)
+                        return (<Displaycommment 
+                            cid={m._id} 
+                            userid={m.userid} 
+                            commentbody={m.commentbody} 
+                            commenton={m.commenton} 
+                            usercommented={m.usercommented}
+                            userlocation={m.userlocation}
+                        />)
                     })}
             </div>
         </>
@@ -60,3 +56,4 @@ const Comment = ({ videoid }) => {
 }
 
 export default Comment
+

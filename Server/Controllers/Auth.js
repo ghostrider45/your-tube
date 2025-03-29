@@ -1,12 +1,22 @@
 import users from "../Models/Auth.js"
 import jwt from "jsonwebtoken"
 export const login = async (req, res) => {
-    const { email } = req.body;
+    const { email, location } = req.body;
     try {
         const existingUser = await users.findOne({ email });
         if (!existingUser) {
             try {
-                const newUser = await users.create({ email });
+                const newUser = await users.create({ 
+                    email,
+                    lastLoginLocation: location || 'Unknown',
+                    loginHistory: [{
+                        timestamp: new Date(),
+                        location: location || 'Unknown'
+                    }]
+                });
+                
+                console.log('📍 New login from:', location || 'Unknown');
+
                 const token = jwt.sign({
                     email: newUser.email,
                     id: newUser._id
@@ -19,6 +29,16 @@ export const login = async (req, res) => {
                 return;
             }
         } else {
+            existingUser.lastLoginLocation = location || 'Unknown';
+            existingUser.loginHistory = existingUser.loginHistory || [];
+            existingUser.loginHistory.push({
+                timestamp: new Date(),
+                location: location || 'Unknown'
+            });
+            await existingUser.save();
+
+            console.log('📍 Login from:', location || 'Unknown');
+
             const token = jwt.sign({
                 email: existingUser.email,
                 id: existingUser._id
@@ -32,3 +52,5 @@ export const login = async (req, res) => {
         return;
     }
 }
+
+

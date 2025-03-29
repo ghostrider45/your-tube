@@ -11,15 +11,25 @@ export const editcomment=(commentdata)=>async(dispatch)=>{
     }
 }
 
-export const postcomment=(commentdata)=>async(dispatch)=>{
+export const postcomment = (commentdata) => async (dispatch) => {
     try {
-        const {data}=await api.postcomment(commentdata)
-        dispatch({type:"POST_COMMENT",payload:data})
-        dispatch(getallcomment())
+        // Get cached location from localStorage
+        const cachedLocation = localStorage.getItem('cachedLocation');
+        const location = cachedLocation ? JSON.parse(cachedLocation) : null;
+
+        // Add location to comment data
+        const commentWithLocation = {
+            ...commentdata,
+            location
+        };
+
+        const { data } = await api.postcomment(commentWithLocation);
+        dispatch({ type: "POST_COMMENT", payload: data });
+        dispatch(getallcomment());
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
-}
+};
 export const getallcomment=()=>async(dispatch)=>{
     try {
         const {data}=await api.getallcomment()
@@ -56,4 +66,5 @@ export const dislikeComment = (id) => async (dispatch) => {
         console.log(error);
     }
 };
+
 

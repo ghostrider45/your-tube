@@ -1,17 +1,15 @@
-import { ClerkProvider } from '@clerk/clerk-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { createStore, compose, applyMiddleware } from 'redux';
-import { thunk } from 'redux-thunk';
-import Reducers from './Reducers';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { ThemeProvider } from './context/ThemeContext';
 import App from './App';
+import store from './store';
 
 const AppWrapper = () => {
     const [clerkConfig, setClerkConfig] = useState(null);
 
     useEffect(() => {
-        // Get user's location from localStorage or fetch it
         const userLocation = localStorage.getItem('userLocation') || 'non-south-india';
         
         const config = {
@@ -24,14 +22,11 @@ const AppWrapper = () => {
                 },
             },
             signIn: {
-                // Restrict to only one authentication method
                 firstFactorOptions: userLocation === 'south-india' 
                     ? [{ strategy: "phone_code", supportedIdentifierTypes: ["phone_number"] }]
                     : [{ strategy: "email_code", supportedIdentifierTypes: ["email_address"] }],
             },
-            // Completely disable unwanted authentication methods
             signUp: {
-                // Prevent sign-ups with the wrong method
                 disabled: true
             }
         };
@@ -42,22 +37,18 @@ const AppWrapper = () => {
     if (!clerkConfig) return null;
 
     return (
-        <ClerkProvider 
-            publishableKey={process.env.REACT_APP_CLERK_PUBLISHABLE_KEY}
-            {...clerkConfig}
-        >
-            <React.StrictMode>
-                <App />
-            </React.StrictMode>
-        </ClerkProvider>
+        <ThemeProvider>
+            <ClerkProvider 
+                publishableKey={process.env.REACT_APP_CLERK_PUBLISHABLE_KEY}
+                {...clerkConfig}
+            >
+                <React.StrictMode>
+                    <App />
+                </React.StrictMode>
+            </ClerkProvider>
+        </ThemeProvider>
     );
 };
-
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-const store = createStore(
-    Reducers,
-    composeEnhancers(applyMiddleware(thunk))
-);
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -65,5 +56,4 @@ root.render(
         <AppWrapper />
     </Provider>
 );
-
 
