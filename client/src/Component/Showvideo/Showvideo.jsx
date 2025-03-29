@@ -7,7 +7,7 @@ const Showvideo = ({vid}) => {
   return (
         <>
       <Link to={`/videopage/${vid._id}`}>
-        <video src={`https://youtube-ott-backend.onrender.com/${vid.filepath}`} className='video_ShowVideo'/>
+        <video src={`http://localhost:5000/${vid.filepath}`} className='video_ShowVideo'/>
     </Link>
     <div className="video_description">
         <div className="Chanel_logo_App">

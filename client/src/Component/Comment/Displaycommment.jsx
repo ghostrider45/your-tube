@@ -24,7 +24,7 @@ const Displaycommment = ({
     const [cmtnody, setcommentbdy] = useState("");
     const [translatedComment, setTranslatedComment] = useState("");
     const [selectedLanguage, setSelectedLanguage] = useState("en");
-    const [originalComment] = useState(commentbody); // Store the original comment
+    const [originalComment] = useState(commentbody);
 
     const hasLiked = currentuser?.result && likedBy.includes(currentuser.result._id);
     const hasDisliked = currentuser?.result && dislikedBy.includes(currentuser.result._id);
@@ -179,6 +179,9 @@ const Displaycommment = ({
 };
 
 export default Displaycommment;
+
+
+
 
 
 
